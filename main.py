@@ -17,8 +17,7 @@ model = genai.GenerativeModel('gemini-1.5-flash')
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     # Ana sayfayı yükle
-    return templates.TemplateResponse("index.html", {"request": request})
-
+    return templates.TemplateResponse(request=request, name="index.html")
 @app.post("/ask-gemini")
 async def ask_gemini(task: str = Form(...), level: str = Form(...), user_input: str = Form("")):
     prompts = {
