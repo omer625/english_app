@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İngilizcik</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans min-h-screen">
+    <div class="max-w-md mx-auto p-6 bg-white shadow-lg min-h-screen">
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-2xl font-bold text-indigo-600">İngilizcik</h1>
+            <button onclick="toggleLang()" id="langBtn" class="bg-gray-200 px-3 py-1 rounded text-sm font-medium">EN</button>
+        </header>
+
+        <div class="grid grid-cols-1 gap-4 mb-8">
+            <button onclick="setMode('quiz')" class="p-4 border-2 border-indigo-100 rounded-xl hover:bg-indigo-50 text-left transition">
+                <span class="block text-lg font-semibold" data-tr="Kelime Quiz" data-en="Vocabulary Quiz">Kelime Quiz</span>
+                <p class="text-sm text-gray-500" data-tr="Seviyene göre kelime testi." data-en="Word tests by level.">Seviyene göre kelime testi.</p>
+            </button>
+            <button onclick="setMode('grammar')" class="p-4 border-2 border-indigo-100 rounded-xl hover:bg-indigo-50 text-left transition">
+                <span class="block text-lg font-semibold" data-tr="Gramer Alıştırması" data-en="Grammar Practice">Gramer Alıştırması</span>
+                <p class="text-sm text-gray-500" data-tr="Gemini ile dil bilgisi çalış." data-en="Study grammar with Gemini.">Gemini ile dil bilgisi çalış.</p>
+            </button>
+            <button onclick="setMode('analysis')" class="p-4 border-2 border-indigo-100 rounded-xl hover:bg-indigo-50 text-left transition">
+                <span class="block text-lg font-semibold" data-tr="Hata Analizi" data-en="Error Analysis">Hata Analizi</span>
+                <p class="text-sm text-gray-500" data-tr="Cümleni yaz, hatalarını öğren." data-en="Write your sentence, learn errors.">Cümleni yaz, hatalarını öğren.</p>
+            </button>
+        </div>
+
+        <div id="actionArea" class="hidden space-y-4">
+            <select id="level" class="w-full p-2 border rounded">
+                <option value="A1">A1 - Beginner</option>
+                <option value="B2">B2 - Upper Intermediate</option>
+                <option value="C1">C1 - Advanced</option>
+            </select>
+            <textarea id="userInput" placeholder="Cümleni buraya yaz..." class="w-full p-3 border rounded-lg hidden"></textarea>
+            <button onclick="runTask()" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700">GÖNDER / SEND</button>
+        </div>
+
+        <div id="resultBox" class="mt-8 p-4 bg-gray-100 rounded-lg hidden whitespace-pre-wrap"></div>
+    </div>
+
+    <script>
+        let currentMode = '';
+        let currentLang = 'tr';
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.getElementById('actionArea').classList.remove('hidden');
+            document.getElementById('userInput').classList.toggle('hidden', mode !== 'analysis');
+            document.getElementById('resultBox').classList.add('hidden');
+        }
+
+        async def runTask() {
+            const level = document.getElementById('level').value;
+            const userInput = document.getElementById('userInput').value;
+            const resBox = document.getElementById('resultBox');
+            
+            resBox.innerHTML = "Düşünüyor... / Thinking...";
+            resBox.classList.remove('hidden');
+
+            const formData = new FormData();
+            formData.append('task', currentMode);
+            formData.append('level', level);
+            formData.append('user_input', userInput);
+
+            const response = await fetch('/ask-gemini', { method: 'POST', body: formData });
+            const data = await response.json();
+            resBox.innerText = data.result;
+        }
+
+        function toggleLang() {
+            currentLang = currentLang === 'tr' ? 'en' : 'tr';
+            document.querySelectorAll('[data-tr]').forEach(el => {
+                el.innerText = el.getAttribute('data-' + currentLang);
+            });
+            document.getElementById('langBtn').innerText = currentLang.toUpperCase() === 'TR' ? 'EN' : 'TR';
+        }
+    </script>
+</body>
+</html>
