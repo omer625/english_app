@@ -5,7 +5,8 @@ from fastapi.templating import Jinja2Templates
 import google.generativeai as genai
 
 app = FastAPI()
-templates = Jinja2Templates(directory="templates")
+BASE_DIR = Path(__file__).resolve().parent
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 # Gemini API Yapılandırması
 api_key = os.getenv("GEMINI_API_KEY")
