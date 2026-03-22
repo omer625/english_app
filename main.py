@@ -1,35 +1,37 @@
 import os
 from pathlib import Path
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Form
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
-import google.generativeai as genai
+from fastapi import Request
+from groq import Groq
 
 app = FastAPI()
+
 BASE_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
-# Gemini API Yapılandırması
-api_key = os.getenv("GEMINI_API_KEY")
-genai.configure(api_key=api_key)
-model = genai.GenerativeModel('gemini-2.0-flash')
+# Groq istemcisi
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
-    # Ana sayfayı yükle
     return templates.TemplateResponse(request=request, name="index.html")
+
 @app.post("/ask-gemini")
 async def ask_gemini(task: str = Form(...), level: str = Form(...), user_input: str = Form("")):
     prompts = {
         "quiz": f"Bana {level} seviyesinde İngilizce bir kelime sorusu sor. Çoktan seçmeli olsun (A, B, C, D). Sadece soruyu ve şıkları yaz, cevabı en sonda 'Cevap: [Şık]' şeklinde belirt.",
-        "grammar": f"Bana {level} seviyesinde bir İngilizce gramer boşluk doldurma sorusu sor. Kullanıcının cümleyi tamamlamasını iste.",
-        "analysis": f"Şu İngilizce cümleyi analiz et: '{user_input}'. Hataları Türkçe açıkla, gramer kurallarını belirt ve doğrusunu göster."
+        "grammar": f"Bana {level} seviyesinde bir İngilizce gramer boşluk doldurma sorusu sor.",
+        "analysis": f"Şu İngilizce cümleyi analiz et: '{user_input}'. Hataları Türkçe açıkla ve doğrusunu göster."
     }
-    
+
     try:
-        response = model.generate_content(prompts.get(task, "Hello"))
-        # Hata ihtimaline karşı yanıtı JSONResponse ile sağlama alıyoruz
-        return JSONResponse(content={"result": str(response.text)})
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompts.get(task, "Hello")}]
+        )
+        return JSONResponse(content={"result": response.choices[0].message.content})
     except Exception as e:
         return JSONResponse(content={"result": f"Hata: {str(e)}"})
 
