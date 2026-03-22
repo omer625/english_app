@@ -12,7 +12,7 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 # Gemini API Yapılandırması
 api_key = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=api_key)
-model = genai.GenerativeModel(model_name='gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-2.0-flash')
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
